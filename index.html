@@ -61,7 +61,7 @@
       <a href="search.html">商品查詢</a>
       <a href="contact.html">聯絡我們</a>
       <a href="track.html">進度查詢</a>
-      <a class="admin-btn" onclick="goToAdmin()">後台管理</a>
+      <a class="admin-btn" href="login.html">後台管理</a>
     </nav>
   </header>
 
@@ -82,16 +82,5 @@
   <footer>
     &copy; 2025 CC代購 - 讓你買得更輕鬆
   </footer>
-
-  <script>
-    function goToAdmin() {
-      const pw = prompt("請輸入後台密碼：");
-      if (pw === "ccadmin2025") {
-        window.location.href = "admin.html";
-      } else if (pw !== null) {
-        alert("密碼錯誤！");
-      }
-    }
-  </script>
 </body>
 </html>
