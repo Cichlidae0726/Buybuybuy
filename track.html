@@ -79,5 +79,29 @@ function toggleMenu() {
   document.getElementById("mobile-nav").classList.toggle("show");
 }
 </script>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
+  const supabase = createClient('https://yulsvfryagetntqbxjgu.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bHN2ZnJ5YWdldG50cWJ4amd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MzMxMDQsImV4cCI6MjA2MDAwOTEwNH0.7U9vaYirq_eRmmn-f47eht1i7oWhYW5RrYcQyEd0eLI')
+
+  document.getElementById('login-btn')?.addEventListener('click', login)
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') login()
+  })
+
+  async function login() {
+    const username = document.getElementById('username').value
+    const password = document.getElementById('password').value
+    const email = `${username}@dummy.cc`
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) {
+      alert('登入失敗：' + error.message)
+    } else {
+      window.location.href = 'profile.html'
+    }
+  }
+</script>
+
 </body>
 </html>
