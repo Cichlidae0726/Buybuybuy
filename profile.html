@@ -1,12 +1,86 @@
-<!DOCTYPE html><html lang="zh-Hant"><head>
-<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CC代購</title><link rel="stylesheet" href="style.css" /></head><body>
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>會員資料</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
 <header><button class="menu-toggle" onclick="toggleMenu()">☰</button><div class="logo">CC代購</div></header>
-<nav id="mobile-nav"><a href="index.html">首頁</a><a href="services.html">服務介紹</a>
-<a href="search.html">代購進度</a><a href="track.html">個人訂單查詢</a>
-<a href="contact.html">聯絡我們</a><a href="admin.html">後台管理</a></nav>
-<main><h1>會員資料</h1>
-<form><label>帳號：</label><input disabled value="iamgod08"><br>
-<label>Line：</label><input><br><label>Facebook：</label><input><br>
-<label>Discord：</label><input><br><label>密碼：</label><input type="password"><br>
-<button>儲存</button></form></main><script src="script.js"></script></body></html>
+<nav id="mobile-nav"><a href="index.html">首頁</a><a href="services.html">服務介紹</a><a href="search.html">代購進度</a><a href="track.html">個人訂單查詢</a><a href="contact.html">聯絡我們</a><a href="admin.html">後台管理</a></nav>
+<main>
+  <h2>會員資料</h2>
+  <form id="profile-form">
+    <p><strong>帳號：</strong> <span id="profile-username">（讀取中）</span></p>
+    <label>Line：</label><input type="text" id="line"><br>
+    <label>Facebook：</label><input type="text" id="facebook"><br>
+    <label>Discord：</label><input type="text" id="discord"><br>
+    <label>新密碼（如需變更）：</label><input type="password" id="new-password"><br>
+    <button type="submit">儲存</button>
+  </form>
+  <br>
+  <button onclick="logout()">登出</button>
+</main>
+<script>
+const client = supabase.createClient(
+  "https://yulsvfryagetntqbxjgu.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bHN2ZnJ5YWdldG50cWJ4amd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MzMxMDQsImV4cCI6MjA2MDAwOTEwNH0.7U9vaYirq_eRmmn-f47eht1i7oWhYW5RrYcQyEd0eLI"
+);
+let currentUser = null;
+
+document.getElementById("profile-form").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  const uid = currentUser.id;
+  const updates = {
+    line: document.getElementById("line").value,
+    facebook: document.getElementById("facebook").value,
+    discord: document.getElementById("discord").value
+  };
+  const { error } = await client.from("users").update(updates).eq("id", uid);
+  if (error) return alert("更新資料失敗：" + error.message);
+
+  const newPass = document.getElementById("new-password").value;
+  if (newPass) {
+    const { error: pwError } = await client.auth.updateUser({ password: newPass });
+    if (pwError) return alert("密碼更新失敗：" + pwError.message);
+  }
+
+  alert("資料已更新！");
+});
+
+async function loadProfile() {
+  const { data: userData, error } = await client.auth.getUser();
+  if (!userData || !userData.user) {
+    window.location.href = "track.html";
+    return;
+  }
+
+  currentUser = userData.user;
+  const email = currentUser.email;
+  const account = email.split("@")[0];
+  document.getElementById("profile-username").textContent = account;
+
+  const { data, error: userErr } = await client.from("users").select("*").eq("id", currentUser.id).single();
+  if (data) {
+    document.getElementById("line").value = data.line || "";
+    document.getElementById("facebook").value = data.facebook || "";
+    document.getElementById("discord").value = data.discord || "";
+  }
+}
+
+async function logout() {
+  await client.auth.signOut();
+  window.location.href = "track.html";
+}
+
+function toggleMenu() {
+  document.getElementById("mobile-nav").classList.toggle("show");
+}
+
+loadProfile();
+</script>
+</body>
+</html>

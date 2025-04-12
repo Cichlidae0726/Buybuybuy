@@ -54,6 +54,7 @@ async function login() {
   currentUser = u;
   document.getElementById("login-area").style.display = "none";
   document.getElementById("order-area").style.display = "block";
+  window.location.href = 'profile.html';
   loadOrders();
 }
 async function loadOrders() {
