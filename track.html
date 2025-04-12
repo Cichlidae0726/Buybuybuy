@@ -1,8 +1,82 @@
-<!DOCTYPE html><html lang="zh-Hant"><head>
-<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CC代購</title><link rel="stylesheet" href="style.css" /></head><body>
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>個人訂單查詢</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
 <header><button class="menu-toggle" onclick="toggleMenu()">☰</button><div class="logo">CC代購</div></header>
-<nav id="mobile-nav"><a href="index.html">首頁</a><a href="services.html">服務介紹</a>
-<a href="search.html">代購進度</a><a href="track.html">個人訂單查詢</a>
-<a href="contact.html">聯絡我們</a><a href="admin.html">後台管理</a></nav>
-<main><h1>個人訂單查詢</h1><form><label>帳號：</label><input><br><label>密碼：</label><input type='password'><br><button>登入</button></form></main><script src="script.js"></script></body></html>
+<nav id="mobile-nav"><a href="index.html">首頁</a><a href="services.html">服務介紹</a><a href="search.html">代購進度</a><a href="track.html">個人訂單查詢</a><a href="contact.html">聯絡我們</a><a href="admin.html">後台管理</a></nav>
+<main>
+  <div id="login-area">
+    <h2>登入</h2>
+    <input type="text" id="username" placeholder="帳號" />
+    <input type="password" id="password" placeholder="密碼" />
+    <button onclick="login()">登入</button>
+  </div>
+  <div id="order-area" style="display:none;">
+    <h2>我的訂單</h2>
+    <select id="statusFilter" onchange="renderOrders()">
+      <option value="">全部</option>
+      <option value="待發貨">待發貨</option>
+      <option value="運送中">運送中</option>
+      <option value="可排發">可排發</option>
+      <option value="已完成">已完成</option>
+      <option value="異常">異常</option>
+    </select>
+    <select id="sortOrder" onchange="renderOrders()">
+      <option value="new">時間由新到舊</option>
+      <option value="old">時間由舊到新</option>
+    </select>
+    <table id="order-table">
+      <thead><tr><th>日期</th><th>名稱</th><th>網站</th><th>狀態</th><th>物流單號</th></tr></thead>
+      <tbody id="orders"></tbody>
+    </table>
+  </div>
+</main>
+<script>
+const supabase = supabase.createClient(
+  "https://yulsvfryagetntqbxjgu.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bHN2ZnJ5YWdldG50cWJ4amd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MzMxMDQsImV4cCI6MjA2MDAwOTEwNH0.7U9vaYirq_eRmmn-f47eht1i7oWhYW5RrYcQyEd0eLI"
+);
+let currentUser = "";
+let orders = [];
+
+async function login() {
+  const u = document.getElementById("username").value;
+  const p = document.getElementById("password").value;
+  const { data, error } = await supabase.auth.signInWithPassword({ email: u + "@fake.cc", password: p });
+  if (error) return alert("登入失敗");
+  currentUser = u;
+  document.getElementById("login-area").style.display = "none";
+  document.getElementById("order-area").style.display = "block";
+  loadOrders();
+}
+async function loadOrders() {
+  const { data, error } = await supabase.from("orders").select("*").eq("customer_name", currentUser);
+  if (error) return alert("讀取失敗");
+  orders = data;
+  renderOrders();
+}
+function renderOrders() {
+  let rows = "";
+  let list = [...orders];
+  const f = document.getElementById("statusFilter").value;
+  const s = document.getElementById("sortOrder").value;
+  if (f) list = list.filter(o => o.status === f);
+  list.sort((a,b) => s==="new" ? new Date(b.created_at)-new Date(a.created_at) : new Date(a.created_at)-new Date(b.created_at));
+  for (const o of list) {
+    rows += `<tr><td>${o.created_at.slice(0,10)}</td><td>${o.item}</td><td>${o.website}</td><td>${o.status}</td><td>${o.tracking || "-"}</td></tr>`;
+  }
+  document.getElementById("orders").innerHTML = rows;
+}
+function toggleMenu() {
+  document.getElementById("mobile-nav").classList.toggle("show");
+}
+</script>
+</body>
+</html>
