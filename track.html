@@ -95,7 +95,22 @@
 <a href="contact.html">聯絡我們</a>
 <a href="login.html">後台管理</a>
 </nav>
-<main><h1>個人訂單查詢</h1><p>請先登入以查看您的訂單進度與個人資訊。</p></main>
+<main>
+<h2>登入</h2>
+<form id="login-form" style="max-width:400px;margin:auto;">
+  <label for="username">帳號：</label><br>
+  <input type="text" id="username" name="username" required style="width:100%;margin-bottom:10px;"><br>
+  <label for="password">密碼：</label><br>
+  <input type="password" id="password" name="password" required style="width:100%;margin-bottom:10px;"><br>
+  <button type="submit" style="width:100%;">登入</button>
+</form>
+<script>
+  document.getElementById('login-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    alert('登入功能尚未串接，這裡將串接 Supabase 使用帳號＋密碼驗證');
+  });
+</script>
+</main>
 <footer>&copy; 2025 CC代購</footer>
 </body>
 </html>

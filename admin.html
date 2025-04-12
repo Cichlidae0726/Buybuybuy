@@ -1,113 +1,41 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CC代購｜後台管理</title>
-  <style>
-    body { margin: 0; font-family: sans-serif; background: #f9f9f9; color: #333; }
-    header, footer { background: #fff; padding: 20px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    nav a { margin: 0 10px; text-decoration: none; color: #0077cc; }
-    .section { max-width: 900px; margin: 40px auto; padding: 0 20px; }
-    h2 { border-left: 4px solid #0077cc; padding-left: 10px; color: #0077cc; }
-    table { width: 100%; border-collapse: collapse; background: #fff; }
-    th, td { padding: 8px; border: 1px solid #ccc; font-size: 14px; }
-    th { background: #f0f0f0; text-align: left; }
-    input[type="text"] { width: 100%; padding: 4px; font-size: 14px; }
-    button {
-      background: #0077cc; color: white; padding: 6px 10px; border: none;
-      border-radius: 4px; cursor: pointer;
-    }
-    .note { font-size: 0.9em; color: #666; margin-top: 10px; }
-  </style>
+  <meta charset="UTF-8">
+  <title>CC代購 | 後台管理</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <h1>CC代購 後台管理</h1>
-    <nav>
-      <a href="index.html">回首頁</a>
-      <button onclick="logout()">登出</button>
+    <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+    <h1>CC代購</h1>
+    <nav id="menu" class="menu">
+      <a href="index.html">首頁</a>
+      <a href="services.html">服務介紹</a>
+      <a href="search.html">代購進度</a>
+      <a href="track.html">個人訂單查詢</a>
     </nav>
   </header>
-
-  <section class="section">
-    <h2>代購進度總覽</h2>
-    <div class="note">※ 直接編輯狀態與備註欄位，系統會自動儲存</div>
-    <table id="orderTable">
-      <thead>
-        <tr>
-          <th>客戶名稱</th>
-          <th>商品名稱</th>
-          <th>狀態</th>
-          <th>備註</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
-
+  <main>
+    <h2>後台管理登入</h2>
+    <form id="login-form" style="max-width:400px;margin:auto;">
+      <label for="username">帳號：</label><br>
+      <input type="text" id="username" name="username" required style="width:100%;margin-bottom:10px;"><br>
+      <label for="password">密碼：</label><br>
+      <input type="password" id="password" name="password" required style="width:100%;margin-bottom:10px;"><br>
+      <button type="submit" style="width:100%;">登入</button>
+    </form>
+    <script>
+      document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('登入功能尚未串接，這裡將串接 Supabase 使用帳號＋密碼驗證');
+      });
+    </script>
+  </main>
   <footer>
-    &copy; 2025 CC代購 - 管理系統
+    <p>&copy; 2025 CC代購</p>
   </footer>
-
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
-    const supabase = createClient(
-      'https://yulsvfryagetntqbxjgu.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bHN2ZnJ5YWdldG50cWJ4amd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MzMxMDQsImV4cCI6MjA2MDAwOTEwNH0.7U9vaYirq_eRmmn-f47eht1i7oWhYW5RrYcQyEd0eLI'
-    );
-
-    const tableBody = document.querySelector('#orderTable tbody');
-
-    const { data: session } = await supabase.auth.getSession();
-    const sessionData = session.session;
-
-    if (!sessionData) {
-      window.location.href = 'login.html';
-    }
-
-    async function fetchOrders() {
-      const { data, error } = await supabase.from('orders').select('*');
-      if (error) {
-        alert('載入資料失敗！' + error.message);
-        return;
-      }
-
-      tableBody.innerHTML = '';
-      data.forEach(order => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${order.customer_name}</td>
-          <td>${order.item}</td>
-          <td><input type="text" value="${order.status || ''}" data-id="${order.id}" data-field="status"></td>
-          <td><input type="text" value="${order.note || ''}" data-id="${order.id}" data-field="note"></td>
-        `;
-        tableBody.appendChild(row);
-      });
-      setupInputEvents();
-    }
-
-    function setupInputEvents() {
-      const inputs = document.querySelectorAll('input[type="text"]');
-      inputs.forEach(input => {
-        input.addEventListener('change', async () => {
-          const id = input.dataset.id;
-          const field = input.dataset.field;
-          const value = input.value;
-          const updateData = {};
-          updateData[field] = value;
-          const { error } = await supabase.from('orders').update(updateData).eq('id', id);
-          if (error) alert('更新失敗：' + error.message);
-        });
-      });
-    }
-
-    fetchOrders();
-
-    window.logout = async () => {
-      await supabase.auth.signOut();
-      window.location.href = 'login.html';
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
