@@ -2,11 +2,17 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>後台管理</title>
+  <title>管理後台</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .tab-button { margin: 0 5px; padding: 5px 10px; background: #ccc; border: none; cursor: pointer; }
+    .tab-button.active { background: #333; color: white; }
+    .tab-content { display: none; margin-top: 10px; }
+    .tab-content.active { display: block; }
+  </style>
 </head>
 <body>
 <header><button class="menu-toggle" onclick="toggleMenu()">☰</button><div class="logo">CC代購</div></header>
@@ -15,110 +21,96 @@
   <div id="login-area">
     <h2>管理員登入</h2>
     <form id="login-form">
-      <div style="margin-bottom: 10px;">
-        <label for="admin-user">帳號</label><br>
-        <input type="text" id="admin-user" required>
-      </div>
-      <div style="margin-bottom: 10px;">
-        <label for="admin-pass">密碼</label><br>
-        <input type="password" id="admin-pass" required>
-      </div>
+      <input type="text" id="admin-user" placeholder="帳號" required>
+      <input type="password" id="admin-pass" placeholder="密碼" required>
       <button type="submit">登入</button>
     </form>
   </div>
 
   <div id="admin-panel" style="display:none;">
-    <h2>訂單管理</h2>
-    <table style="width:100%;border-collapse:collapse;" border="1">
-      <thead>
-        <tr><th>日期</th><th>帳號</th><th>名稱</th><th>網站</th><th>狀態</th><th>物流單號</th></tr>
-      </thead>
-      <tbody id="admin-orders"></tbody>
-    </table>
+    <h2>管理後台</h2>
+    <div>
+      <button class="tab-button active" onclick="switchTab('orders')">訂單管理</button>
+      <button class="tab-button" onclick="switchTab('members')">會員資料</button>
+    </div>
 
-    <h3>新增訂單</h3>
-    <form id="add-form">
-      <input id="new-user" placeholder="帳號" required>
-      <input id="new-item" placeholder="商品名稱" required>
-      <input id="new-site" placeholder="網站" required>
-      <select id="new-status">
-        <option value="待發貨">待發貨</option>
-        <option value="運送中">運送中</option>
-        <option value="可排發">可排發</option>
-        <option value="已完成">已完成</option>
-        <option value="異常">異常</option>
-      </select>
-      <input id="new-tracking" placeholder="物流單號">
-      <button type="submit">新增訂單</button>
-    </form>
+    <div id="tab-orders" class="tab-content active">
+      <h3>訂單管理</h3>
+      <table border="1" width="100%" style="border-collapse:collapse;"><thead>
+        <tr><th>日期</th><th>帳號</th><th>名稱</th><th>網站</th><th>狀態</th><th>物流單號</th></tr>
+      </thead><tbody id="admin-orders"></tbody></table>
+    </div>
+
+    <div id="tab-members" class="tab-content">
+      <h3>會員資料</h3>
+      <table border="1" width="100%" style="border-collapse:collapse;"><thead>
+        <tr><th>帳號</th><th>姓名</th><th>Line</th><th>Facebook</th><th>Discord</th><th>權限</th></tr>
+      </thead><tbody id="admin-users"></tbody></table>
+    </div>
   </div>
 </main>
+
 <script>
 const client = supabase.createClient(
   "https://yulsvfryagetntqbxjgu.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bHN2ZnJ5YWdldG50cWJ4amd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MzMxMDQsImV4cCI6MjA2MDAwOTEwNH0.7U9vaYirq_eRmmn-f47eht1i7oWhYW5RrYcQyEd0eLI"
 );
 
-document.getElementById("login-form").addEventListener("submit", async function (e) {
+document.getElementById("login-form").addEventListener("submit", async function(e) {
   e.preventDefault();
-  await adminLogin();
-});
-
-document.getElementById("add-form").addEventListener("submit", async function (e) {
-  e.preventDefault();
-  await addOrder();
-});
-
-async function adminLogin() {
   const u = document.getElementById("admin-user").value;
   const p = document.getElementById("admin-pass").value;
   const { data, error } = await client.auth.signInWithPassword({ email: u + "@fake.cc", password: p });
-  if (error) return alert("登入失敗：" + error.message);
-  
-  const { data: userinfo, error: roleErr } = await client.from("users").select("role").eq("id", data.user.id).single();
-  if (roleErr || !userinfo || userinfo.role !== "admin") {
-    alert("您沒有後台管理員權限");
-    return window.location.href = "index.html";
-  }
+  if (error) return alert("登入失敗");
+  const { data: userinfo } = await client.from("users").select("role").eq("id", data.user.id).single();
+  if (!userinfo || userinfo.role !== "admin") return alert("您沒有後台權限");
 
   document.getElementById("login-area").style.display = "none";
   document.getElementById("admin-panel").style.display = "block";
-  await loadAllOrders();
+  loadOrders();
+  loadMembers();
+});
+
+function switchTab(tab) {
+  document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+  document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add("active");
+  document.getElementById("tab-" + tab).classList.add("active");
 }
 
-async function loadAllOrders() {
+async function loadOrders() {
   const { data, error } = await client.from("orders").select("*");
-  if (error) return alert("讀取失敗：" + error.message);
-  let rows = "";
+  if (error) return;
+  let html = "";
   for (const o of data) {
-    rows += `<tr>
-      <td>${o.created_at?.slice(0,10) || "-"}</td>
+    html += `<tr>
+      <td>${o.created_at?.slice(0,10) || ""}</td>
       <td>${o.customer_name}</td>
       <td>${o.item}</td>
       <td>${o.website}</td>
       <td>${o.status}</td>
-      <td>${o.tracking || "-"}</td>
+      <td>${o.tracking}</td>
     </tr>`;
   }
-  document.getElementById("admin-orders").innerHTML = rows;
+  document.getElementById("admin-orders").innerHTML = html;
 }
 
-async function addOrder() {
-  const user = document.getElementById("new-user").value;
-  const item = document.getElementById("new-item").value;
-  const site = document.getElementById("new-site").value;
-  const status = document.getElementById("new-status").value;
-  const tracking = document.getElementById("new-tracking").value;
-  const { error } = await client.from("orders").insert([{
-    customer_name: user,
-    item: item,
-    website: site,
-    status: status,
-    tracking: tracking
-  }]);
-  if (error) return alert("新增失敗：" + error.message);
-  alert("新增成功！");
-  await loadAllOrders();
+async function loadMembers() {
+  const { data, error } = await client.from("users").select("*");
+  if (error) return;
+  let html = "";
+  for (const u of data) {
+    const email = u.email || "-";
+    html += `<tr>
+      <td>${email.split("@")[0]}</td>
+      <td>${u.name || ""}</td>
+      <td>${u.line || ""}</td>
+      <td>${u.facebook || ""}</td>
+      <td>${u.discord || ""}</td>
+      <td>${u.role || "user"}</td>
+    </tr>`;
+  }
+  document.getElementById("admin-users").innerHTML = html;
 }
 
 function toggleMenu() {
