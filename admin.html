@@ -117,5 +117,46 @@ function toggleMenu() {
   document.getElementById("mobile-nav").classList.toggle("show");
 }
 </script>
+
+<script>
+const client = supabase.createClient(
+  "https://yulsvfryagetntqbxjgu.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+);
+
+document.getElementById("login-form").addEventListener("submit", async function(e) {
+  e.preventDefault();
+  const emailInput = document.getElementById("admin-user").value;
+  const password = document.getElementById("admin-pass").value;
+  const email = emailInput.includes("@") ? emailInput : emailInput + "@fake.cc";
+
+  try {
+    const { data, error } = await client.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if (error) {
+      alert("登入失敗：" + error.message);
+      return;
+    }
+
+    const uid = data.user.id;
+    const { data: userinfo, error: roleErr } = await client.from("users").select("role").eq("id", uid).single();
+
+    if (roleErr || !userinfo || userinfo.role !== "admin") {
+      alert("您沒有後台管理員權限");
+      return window.location.href = "index.html";
+    }
+
+    // 成功登入且為 admin，導向管理頁
+    window.location.href = "admin.html";
+
+  } catch (err) {
+    alert("登入錯誤：" + err.message);
+  }
+});
+</script>
+
 </body>
 </html>
