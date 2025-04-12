@@ -6,23 +6,62 @@
   <title>CC代購</title>
   <style>
     body { margin: 0; font-family: sans-serif; background-color: #f9f9f9; color: #333; }
-    header { background-color: #ffffff; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; }
-    nav a { margin: 0 10px; text-decoration: none; color: #0077cc; }
-    .section { max-width: 800px; margin: 40px auto; padding: 0 20px; }
-    .section h2 { border-left: 4px solid #0077cc; padding-left: 10px; color: #0077cc; }
-    footer { text-align: center; padding: 20px; background-color: #f1f1f1; margin-top: 40px; font-size: 0.9rem; color: #666; }
+    header {
+      background-color: #ffffff;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    header h1 { margin: 0; font-size: 1.5em; }
+    nav { display: flex; flex-wrap: wrap; align-items: center; }
+    nav a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: #0077cc;
+      font-weight: bold;
+    }
+    .section {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .section h2 {
+      border-left: 4px solid #0077cc;
+      padding-left: 10px;
+      color: #0077cc;
+    }
+    footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #f1f1f1;
+      margin-top: 40px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+    .admin-btn {
+      background: #0077cc;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      text-decoration: none;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>CC代購</h1>
-    <p>你下單，我飛去買！專業代購日韓/美國商品</p>
     <nav>
       <a href="index.html">首頁</a>
       <a href="services.html">服務介紹</a>
       <a href="search.html">商品查詢</a>
       <a href="contact.html">聯絡我們</a>
       <a href="track.html">進度查詢</a>
+      <a class="admin-btn" onclick="goToAdmin()">後台管理</a>
     </nav>
   </header>
 
@@ -43,5 +82,16 @@
   <footer>
     &copy; 2025 CC代購 - 讓你買得更輕鬆
   </footer>
+
+  <script>
+    function goToAdmin() {
+      const pw = prompt("請輸入後台密碼：");
+      if (pw === "ccadmin2025") {
+        window.location.href = "admin.html";
+      } else if (pw !== null) {
+        alert("密碼錯誤！");
+      }
+    }
+  </script>
 </body>
 </html>
