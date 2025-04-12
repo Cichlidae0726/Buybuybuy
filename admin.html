@@ -14,9 +14,11 @@
 <main>
   <div id="login-area">
     <h2>管理員登入</h2>
-    <input type="text" id="admin-user" placeholder="帳號">
-    <input type="password" id="admin-pass" placeholder="密碼">
-    <button onclick="adminLogin()">登入</button>
+    <form id="login-form">
+      <input type="text" id="admin-user" placeholder="帳號" required>
+      <input type="password" id="admin-pass" placeholder="密碼" required>
+      <button type="submit">登入</button>
+    </form>
   </div>
 
   <div id="admin-panel" style="display:none;">
@@ -29,18 +31,20 @@
     </table>
 
     <h3>新增訂單</h3>
-    <input id="new-user" placeholder="帳號">
-    <input id="new-item" placeholder="商品名稱">
-    <input id="new-site" placeholder="網站">
-    <select id="new-status">
-      <option value="待發貨">待發貨</option>
-      <option value="運送中">運送中</option>
-      <option value="可排發">可排發</option>
-      <option value="已完成">已完成</option>
-      <option value="異常">異常</option>
-    </select>
-    <input id="new-tracking" placeholder="物流單號">
-    <button onclick="addOrder()">新增訂單</button>
+    <form id="add-form">
+      <input id="new-user" placeholder="帳號" required>
+      <input id="new-item" placeholder="商品名稱" required>
+      <input id="new-site" placeholder="網站" required>
+      <select id="new-status">
+        <option value="待發貨">待發貨</option>
+        <option value="運送中">運送中</option>
+        <option value="可排發">可排發</option>
+        <option value="已完成">已完成</option>
+        <option value="異常">異常</option>
+      </select>
+      <input id="new-tracking" placeholder="物流單號">
+      <button type="submit">新增訂單</button>
+    </form>
   </div>
 </main>
 <script>
@@ -48,8 +52,17 @@ const supabase = supabase.createClient(
   "https://yulsvfryagetntqbxjgu.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bHN2ZnJ5YWdldG50cWJ4amd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MzMxMDQsImV4cCI6MjA2MDAwOTEwNH0.7U9vaYirq_eRmmn-f47eht1i7oWhYW5RrYcQyEd0eLI"
 );
-
 let adminName = "";
+
+document.getElementById("login-form").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  await adminLogin();
+});
+
+document.getElementById("add-form").addEventListener("submit", async function (e) {
+  e.preventDefault();
+  await addOrder();
+});
 
 async function adminLogin() {
   const u = document.getElementById("admin-user").value;
@@ -68,7 +81,7 @@ async function loadAllOrders() {
   let rows = "";
   for (const o of data) {
     rows += `<tr>
-      <td>${o.created_at.slice(0,10)}</td>
+      <td>${o.created_at?.slice(0,10) || "-"}</td>
       <td>${o.customer_name}</td>
       <td>${o.item}</td>
       <td>${o.website}</td>
