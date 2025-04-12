@@ -15,8 +15,14 @@
   <div id="login-area">
     <h2>管理員登入</h2>
     <form id="login-form">
-      <input type="text" id="admin-user" placeholder="帳號" required>
-      <input type="password" id="admin-pass" placeholder="密碼" required>
+      <div style="margin-bottom: 10px;">
+        <label for="admin-user">帳號</label><br>
+        <input type="text" id="admin-user" required>
+      </div>
+      <div style="margin-bottom: 10px;">
+        <label for="admin-pass">密碼</label><br>
+        <input type="password" id="admin-pass" required>
+      </div>
       <button type="submit">登入</button>
     </form>
   </div>
@@ -70,7 +76,7 @@ async function adminLogin() {
   if (error) return alert("登入失敗：" + error.message);
   document.getElementById("login-area").style.display = "none";
   document.getElementById("admin-panel").style.display = "block";
-  loadAllOrders();
+  await loadAllOrders();
 }
 
 async function loadAllOrders() {
@@ -105,7 +111,7 @@ async function addOrder() {
   }]);
   if (error) return alert("新增失敗：" + error.message);
   alert("新增成功！");
-  loadAllOrders();
+  await loadAllOrders();
 }
 
 function toggleMenu() {
