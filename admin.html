@@ -1,8 +1,105 @@
-<!DOCTYPE html><html lang="zh-Hant"><head>
-<meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CC代購</title><link rel="stylesheet" href="style.css" /></head><body>
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>後台管理</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
 <header><button class="menu-toggle" onclick="toggleMenu()">☰</button><div class="logo">CC代購</div></header>
-<nav id="mobile-nav"><a href="index.html">首頁</a><a href="services.html">服務介紹</a>
-<a href="search.html">代購進度</a><a href="track.html">個人訂單查詢</a>
-<a href="contact.html">聯絡我們</a><a href="admin.html">後台管理</a></nav>
-<main><h1>後台登入</h1><form><label>帳號：</label><input><br><label>密碼：</label><input type='password'><br><button>登入</button></form></main><script src="script.js"></script></body></html>
+<nav id="mobile-nav"><a href="index.html">首頁</a><a href="services.html">服務介紹</a><a href="search.html">代購進度</a><a href="track.html">個人訂單查詢</a><a href="contact.html">聯絡我們</a><a href="admin.html">後台管理</a></nav>
+<main>
+  <div id="login-area">
+    <h2>管理員登入</h2>
+    <input type="text" id="admin-user" placeholder="帳號">
+    <input type="password" id="admin-pass" placeholder="密碼">
+    <button onclick="adminLogin()">登入</button>
+  </div>
+
+  <div id="admin-panel" style="display:none;">
+    <h2>訂單管理</h2>
+    <table style="width:100%;border-collapse:collapse;" border="1">
+      <thead>
+        <tr><th>日期</th><th>帳號</th><th>名稱</th><th>網站</th><th>狀態</th><th>物流單號</th></tr>
+      </thead>
+      <tbody id="admin-orders"></tbody>
+    </table>
+
+    <h3>新增訂單</h3>
+    <input id="new-user" placeholder="帳號">
+    <input id="new-item" placeholder="商品名稱">
+    <input id="new-site" placeholder="網站">
+    <select id="new-status">
+      <option value="待發貨">待發貨</option>
+      <option value="運送中">運送中</option>
+      <option value="可排發">可排發</option>
+      <option value="已完成">已完成</option>
+      <option value="異常">異常</option>
+    </select>
+    <input id="new-tracking" placeholder="物流單號">
+    <button onclick="addOrder()">新增訂單</button>
+  </div>
+</main>
+<script>
+const supabase = supabase.createClient(
+  "https://yulsvfryagetntqbxjgu.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bHN2ZnJ5YWdldG50cWJ4amd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MzMxMDQsImV4cCI6MjA2MDAwOTEwNH0.7U9vaYirq_eRmmn-f47eht1i7oWhYW5RrYcQyEd0eLI"
+);
+
+let adminName = "";
+
+async function adminLogin() {
+  const u = document.getElementById("admin-user").value;
+  const p = document.getElementById("admin-pass").value;
+  const { data, error } = await supabase.auth.signInWithPassword({ email: u + "@fake.cc", password: p });
+  if (error) return alert("登入失敗");
+  adminName = u;
+  document.getElementById("login-area").style.display = "none";
+  document.getElementById("admin-panel").style.display = "block";
+  loadAllOrders();
+}
+
+async function loadAllOrders() {
+  const { data, error } = await supabase.from("orders").select("*");
+  if (error) return alert("讀取失敗");
+  let rows = "";
+  for (const o of data) {
+    rows += `<tr>
+      <td>${o.created_at.slice(0,10)}</td>
+      <td>${o.customer_name}</td>
+      <td>${o.item}</td>
+      <td>${o.website}</td>
+      <td>${o.status}</td>
+      <td>${o.tracking || "-"}</td>
+    </tr>`;
+  }
+  document.getElementById("admin-orders").innerHTML = rows;
+}
+
+async function addOrder() {
+  const user = document.getElementById("new-user").value;
+  const item = document.getElementById("new-item").value;
+  const site = document.getElementById("new-site").value;
+  const status = document.getElementById("new-status").value;
+  const tracking = document.getElementById("new-tracking").value;
+  const { error } = await supabase.from("orders").insert([{
+    customer_name: user,
+    item: item,
+    website: site,
+    status: status,
+    tracking: tracking
+  }]);
+  if (error) return alert("新增失敗：" + error.message);
+  alert("新增成功！");
+  loadAllOrders();
+}
+
+function toggleMenu() {
+  document.getElementById("mobile-nav").classList.toggle("show");
+}
+</script>
+</body>
+</html>
