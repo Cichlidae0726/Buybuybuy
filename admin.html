@@ -48,11 +48,10 @@
   </div>
 </main>
 <script>
-const supabase = supabase.createClient(
+const client = supabase.createClient(
   "https://yulsvfryagetntqbxjgu.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bHN2ZnJ5YWdldG50cWJ4amd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MzMxMDQsImV4cCI6MjA2MDAwOTEwNH0.7U9vaYirq_eRmmn-f47eht1i7oWhYW5RrYcQyEd0eLI"
 );
-let adminName = "";
 
 document.getElementById("login-form").addEventListener("submit", async function (e) {
   e.preventDefault();
@@ -67,17 +66,16 @@ document.getElementById("add-form").addEventListener("submit", async function (e
 async function adminLogin() {
   const u = document.getElementById("admin-user").value;
   const p = document.getElementById("admin-pass").value;
-  const { data, error } = await supabase.auth.signInWithPassword({ email: u + "@fake.cc", password: p });
-  if (error) return alert("登入失敗");
-  adminName = u;
+  const { data, error } = await client.auth.signInWithPassword({ email: u + "@fake.cc", password: p });
+  if (error) return alert("登入失敗：" + error.message);
   document.getElementById("login-area").style.display = "none";
   document.getElementById("admin-panel").style.display = "block";
   loadAllOrders();
 }
 
 async function loadAllOrders() {
-  const { data, error } = await supabase.from("orders").select("*");
-  if (error) return alert("讀取失敗");
+  const { data, error } = await client.from("orders").select("*");
+  if (error) return alert("讀取失敗：" + error.message);
   let rows = "";
   for (const o of data) {
     rows += `<tr>
@@ -98,7 +96,7 @@ async function addOrder() {
   const site = document.getElementById("new-site").value;
   const status = document.getElementById("new-status").value;
   const tracking = document.getElementById("new-tracking").value;
-  const { error } = await supabase.from("orders").insert([{
+  const { error } = await client.from("orders").insert([{
     customer_name: user,
     item: item,
     website: site,
