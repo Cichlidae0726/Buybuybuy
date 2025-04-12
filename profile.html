@@ -14,15 +14,12 @@
 <main>
   <h2>會員資料</h2>
   <form id="profile-form">
-    <p><strong>帳號：</strong> <span id="username">（讀取中）</span></p>
-    <label>姓名：</label><input type="text" id="name"><br>
+    <p><strong>帳號：</strong> <span id="profile-username">（讀取中）</span></p>
     <label>Line：</label><input type="text" id="line"><br>
     <label>Facebook：</label><input type="text" id="facebook"><br>
     <label>Discord：</label><input type="text" id="discord"><br>
-    <h3>變更密碼</h3>
-    <label>舊密碼：</label><input type="password" id="old-password"><br>
-    <label>新密碼：</label><input type="password" id="new-password"><br>
-    <button type="submit">儲存變更</button>
+    <label>新密碼（如需變更）：</label><input type="password" id="new-password"><br>
+    <button type="submit">儲存</button>
   </form>
   <br>
   <button onclick="logout()">登出</button>
@@ -37,52 +34,52 @@ let currentUser = null;
 document.getElementById("profile-form").addEventListener("submit", async function (e) {
   e.preventDefault();
   const uid = currentUser.id;
-
-  // 驗證舊密碼
-  const email = currentUser.email;
-  const oldPass = document.getElementById("old-password").value;
-  const newPass = document.getElementById("new-password").value;
-  if (oldPass && newPass) {
-    const { error: loginErr } = await client.auth.signInWithPassword({ email, password: oldPass });
-    if (loginErr) return alert("舊密碼錯誤！");
-    const { error: pwErr } = await client.auth.updateUser({ password: newPass });
-    if (pwErr) return alert("密碼變更失敗：" + pwErr.message);
-  }
-
-  // 更新使用者欄位
   const updates = {
-    name: document.getElementById("name").value,
     line: document.getElementById("line").value,
     facebook: document.getElementById("facebook").value,
-    discord: document.getElementById("discord").value,
+    discord: document.getElementById("discord").value
   };
   const { error } = await client.from("users").update(updates).eq("id", uid);
   if (error) return alert("更新資料失敗：" + error.message);
+
+  const newPass = document.getElementById("new-password").value;
+  if (newPass) {
+    const { error: pwError } = await client.auth.updateUser({ password: newPass });
+    if (pwError) return alert("密碼更新失敗：" + pwError.message);
+  }
+
   alert("資料已更新！");
 });
 
 async function loadProfile() {
-  const { data: session } = await client.auth.getUser();
-  if (!session.user) return (window.location.href = "track.html");
-  currentUser = session.user;
-  const account = currentUser.email.split("@")[0];
-  document.getElementById("username").textContent = account;
+  const { data: userData, error } = await client.auth.getUser();
+  if (!userData || !userData.user) {
+    window.location.href = "track.html";
+    return;
+  }
 
-  const { data } = await client.from("users").select("*").eq("id", currentUser.id).single();
+  currentUser = userData.user;
+  const email = currentUser.email;
+  const account = email.split("@")[0];
+  document.getElementById("profile-username").textContent = account;
+
+  const { data, error: userErr } = await client.from("users").select("*").eq("id", currentUser.id).single();
   if (data) {
-    document.getElementById("name").value = data.name || "";
     document.getElementById("line").value = data.line || "";
     document.getElementById("facebook").value = data.facebook || "";
     document.getElementById("discord").value = data.discord || "";
   }
 }
 
-function logout() {
-  client.auth.signOut().then(() => window.location.href = "track.html");
+async function logout() {
+  await client.auth.signOut();
+  window.location.href = "track.html";
 }
+
 function toggleMenu() {
   document.getElementById("mobile-nav").classList.toggle("show");
 }
+
 loadProfile();
 </script>
 </body>

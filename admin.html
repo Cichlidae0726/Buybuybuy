@@ -74,6 +74,13 @@ async function adminLogin() {
   const p = document.getElementById("admin-pass").value;
   const { data, error } = await client.auth.signInWithPassword({ email: u + "@fake.cc", password: p });
   if (error) return alert("登入失敗：" + error.message);
+  
+  const { data: userinfo, error: roleErr } = await client.from("users").select("role").eq("id", data.user.id).single();
+  if (roleErr || !userinfo || userinfo.role !== "admin") {
+    alert("您沒有後台管理員權限");
+    return window.location.href = "index.html";
+  }
+
   document.getElementById("login-area").style.display = "none";
   document.getElementById("admin-panel").style.display = "block";
   await loadAllOrders();
